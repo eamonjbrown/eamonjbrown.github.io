@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Augie's Graduation Trip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: chart-table split. Sticky route map on the left, the day-by-day itinerary running down the right like a logbook. */
+:root{
+  --bg:#EEF2F0; --paper:#FBFCFB; --ink:#14222A; --muted:#5A6A6F; --rule:#CCD6D4;
+  --sea:#DCE7E7; --land:#F6F5EF; --coast:#B9C7C6;
+  --accent:#0E6A73; --accent-soft:#D3E7E7; --flight:#B5452B;
+  --hike:#4F7A3A; --food:#B07A12; --surf:#2867A8; --art:#7D3C78;
+  --display:"Young Serif",Georgia,"Times New Roman",serif;
+  --body:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1618; --paper:#142024; --ink:#E4EBE9; --muted:#93A4A6; --rule:#2A3A3E;
+  --sea:#11262B; --land:#1B2B2F; --coast:#2F4448;
+  --accent:#5DBDC3; --accent-soft:#16363A; --flight:#E58466;
+  --hike:#8DBB72; --food:#E0B04E; --surf:#74A9E3; --art:#C990C4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1618; --paper:#142024; --ink:#E4EBE9; --muted:#93A4A6; --rule:#2A3A3E;
+  --sea:#11262B; --land:#1B2B2F; --coast:#2F4448;
+  --accent:#5DBDC3; --accent-soft:#16363A; --flight:#E58466;
+  --hike:#8DBB72; --food:#E0B04E; --surf:#74A9E3; --art:#C990C4; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+[hidden]{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:28px}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+
+/* Header */
+header{display:grid;gap:18px}
+.head-top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+h1{font-size:clamp(34px,5.4vw,58px);line-height:1.02;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--accent)}
+.sub{color:var(--muted);max-width:60ch;margin:6px 0 0}
+.controls{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+.seg{display:inline-flex;background:var(--paper);border:1px solid var(--rule);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;padding:7px 14px;border-radius:999px;font-size:14px;font-weight:500;color:var(--muted);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.ctl-label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:8px}
+
+/* Stats strip */
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--ink);border-bottom:1px solid var(--rule)}
+.stat{padding:12px 14px 12px 0;display:grid;gap:2px}
+.stat + .stat{padding-left:14px;border-left:1px solid var(--rule)}
+.stat b{font-family:var(--display);font-weight:400;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--muted)}
+.verdict{font-size:15px;max-width:72ch;margin:0}
+.verdict strong{font-weight:600}
+
+/* Main split */
+.split{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;align-items:start}
+.mapbox{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--sea);border-radius:14px;overflow:hidden;border:1px solid var(--rule)}
+.mapbox svg{display:block;width:100%;height:auto;max-height:80vh}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 14px;background:var(--paper);border-top:1px solid var(--rule);font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--accent);vertical-align:middle;margin-right:6px}
+.legend i.fl{border-top:2px dashed var(--flight)}
+.legend i.tr{border-top:2px dotted var(--ink)}
+.legend i.sd{border-top:1.5px dotted var(--muted)}
+.mapnote{position:absolute;left:12px;top:10px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* Filters */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);background:var(--paper);border-radius:999px;padding:5px 11px;font-size:13px}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+.chip[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.dot.hike{background:var(--hike)}.dot.food{background:var(--food)}.dot.surf{background:var(--surf)}.dot.art{background:var(--art)}
+
+/* Itinerary */
+.days{list-style:none;margin:0;padding:0;display:grid}
+.base{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:18px 0 6px;border-bottom:1px solid var(--ink)}
+.base h3{font-size:21px}
+.base .meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+.stay{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:4px;margin-left:8px;vertical-align:2px}
+.stay.rental{background:var(--accent-soft);color:var(--accent)}
+.stay.hotel{border:1px solid var(--rule);color:var(--muted)}
+.stay.air{border:1px dashed var(--flight);color:var(--flight)}
+.day{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:11px 8px 11px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:opacity .2s,background .2s;border-radius:0}
+.day:hover,.day.on{background:color-mix(in srgb,var(--accent-soft) 55%,transparent)}
+.day.dim{opacity:.32}
+.dnum{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:3px;padding-left:4px}
+.dnum b{display:block;font-family:var(--display);font-weight:400;font-size:22px;color:var(--ink);line-height:1}
+.dtitle{font-weight:600;margin:0}
+.ddet{margin:2px 0 0;color:var(--ink);opacity:.85}
+.drow{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:6px;font-size:12.5px;color:var(--muted)}
+.drive{font-family:var(--mono);font-size:11.5px}
+.tags{display:inline-flex;gap:5px}
+.tags .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.alt{margin-top:6px;font-size:13px;color:var(--accent);display:flex;gap:6px}
+.alt::before{content:"↳";font-family:var(--mono)}
+
+/* Lower sections */
+.lower{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:28px;align-items:start}
+.panel{background:var(--paper);border:1px solid var(--rule);border-radius:14px;padding:20px 22px;display:grid;gap:14px}
+.panel h2{font-size:24px}
+.lg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 22px}
+.lg div{display:grid;gap:3px;min-width:0}
+.lg dt{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lg dd{margin:0;font-size:14px}
+.notes{display:grid;gap:8px;font-size:14px;margin:0;padding:0;list-style:none}
+.notes li{padding-left:14px;position:relative}
+.notes li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:1.5px;background:var(--accent)}
+.check{list-style:none;margin:0;padding:0;display:grid}
+.check li{border-bottom:1px solid var(--rule)}
+.check label{display:flex;gap:10px;align-items:flex-start;padding:9px 0;font-size:14px;cursor:pointer}
+.check input{accent-color:var(--accent);margin-top:3px;width:16px;height:16px;flex:none}
+.check input:checked + span{color:var(--muted);text-decoration:line-through}
+.check .when{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap;padding-left:8px}
+footer{font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px;border-top:1px solid var(--rule);padding-top:14px}
+
+/* Map text */
+.lbl{font-family:var(--body);font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--land);stroke-linejoin:round}
+.lbl.minor{font-weight:500;fill:var(--muted)}
+.sea-lbl{font-family:var(--display);font-style:italic;fill:var(--muted);opacity:.7;letter-spacing:.04em}
+
+@media (max-width:900px){
+  .split,.lower{grid-template-columns:minmax(0,1fr)}
+  .mapbox{position:relative;top:0}
+  .mapbox svg{max-height:62vh}
+  .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .stat:nth-child(4){border-left:0;padding-left:0}
+  .stat:nth-child(n+4){border-top:1px solid var(--rule)}
+}
+@media (max-width:520px){
+  .lg{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat:nth-child(3),.stat:nth-child(5){border-left:0;padding-left:0}
+  .stat:nth-child(4){border-left:1px solid var(--rule);padding-left:14px}
+  .stat:nth-child(n+3){border-top:1px solid var(--rule)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="head-top">
+      <div>
+        <div class="eyebrow">June 2027 · Leaves a few days after graduation</div>
+        <h1>Barcelona to the <em>Bay of Biscay</em><span id="h1uk">, then Britain</span></h1>
+        <p class="sub">Three ways to do the trip after Augie graduates. Each starts in Barcelona, flies to Asturias, and drives through the Picos de Europa to San Sebastián. Switch between the routes and the size of the group below.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div><span class="ctl-label">Route</span>
+        <div class="seg" role="group" aria-label="Route option" id="optSeg">
+          <button id="opt-A" data-opt="A" aria-pressed="true">A · Spain only</button>
+          <button id="opt-M" data-opt="M" aria-pressed="false">A + London</button>
+          <button id="opt-B" data-opt="B" aria-pressed="false">B · Spain + UK</button>
+        </div></div>
+      <div><span class="ctl-label">Group</span>
+        <div class="seg" role="group" aria-label="Group size" id="grpSeg">
+          <button id="grp-5" data-grp="5" aria-pressed="true">Core 5</button>
+          <button id="grp-9" data-grp="9" aria-pressed="false">All 8</button>
+        </div></div>
+    </div>
+  </header>
+
+  <section class="stats" id="stats" aria-label="Trip summary"></section>
+  <p class="verdict" id="verdict"></p>
+
+  <section class="split">
+    <div class="mapbox">
+      <span class="mapnote" id="mapnote"></span>
+      <svg id="map" role="img" aria-label="Route map"></svg>
+      <div class="legend"><span><i></i>Drive</span><span><i class="fl"></i>Flight</span><span><i class="tr"></i>Train</span><span><i class="sd"></i>Day trip</span></div>
+    </div>
+    <div>
+      <div class="filters" role="group" aria-label="Highlight days by interest">
+        <span class="ctl-label">Highlight</span>
+        <button class="chip" id="f-hike" data-tag="hike" aria-pressed="false"><span class="dot hike"></span>Hiking</button>
+        <button class="chip" id="f-food" data-tag="food" aria-pressed="false"><span class="dot food"></span>Food</button>
+        <button class="chip" id="f-surf" data-tag="surf" aria-pressed="false"><span class="dot surf"></span>Beach &amp; surf</button>
+        <button class="chip" id="f-art" data-tag="art" aria-pressed="false"><span class="dot art"></span>Cities &amp; art</button>
+      </div>
+      <ol class="days" id="days"></ol>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="panel">
+      <div><div class="eyebrow" id="lgEyebrow"></div><h2>Logistics</h2></div>
+      <dl class="lg" id="lg"></dl>
+      <ul class="notes">
+        <li><strong>Flights.</strong> Boston to Barcelona is nonstop on Level, Iberia and Delta. Barcelona to Asturias has about 5 nonstops a day on Vueling and Volotea. Bilbao to Edinburgh is a Vueling nonstop on some days only, so check the 2027 schedule. United's Bilbao to Newark nonstop is scheduled for 21 May to 22 Sep 2027.</li>
+        <li><strong>Driving.</strong> Spain asks US drivers for an International Driving Permit (from AAA). Both car hires are one-way, so expect a drop fee. In the UK you drive on the left, and automatics need booking early.</li>
+        <li><strong>Rentals.</strong> In Barcelona and San Sebastián, book only listings that show a tourist licence number. Both cities are cancelling unlicensed rentals.</li>
+        <li><strong>Entry.</strong> The UK needs an ETA for each traveller. The EU's ETIAS is due around late 2026, so check it before June.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <div><div class="eyebrow">Ticks are saved in this browser only</div><h2>Before you book</h2></div>
+      <ul class="check" id="check"></ul>
+    </div>
+  </section>
+
+  <footer>
+    <span>Drive times are approximate. Flight details were checked in November 2026.</span>
+    <span>Prepared by Eamon for the family.</span>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script>
+let LAND = [];
+(function(){
+  const B={w:-25,e:16,s:34,n:63};
+  fetch("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-50m.json").then(r=>r.json()).then(t=>{
+    const f=topojson.feature(t,t.objects.land), out=[];
+    for(const ft of (f.features||[f])){const g=ft.geometry, polys=g.type==="Polygon"?[g.coordinates]:g.coordinates;
+      for(const p of polys){const r=p[0]; if(!r.some(([x,y])=>x>B.w&&x<B.e&&y>B.s&&y<B.n))continue;
+        const s=[]; for(const q of r){const c=[Math.max(B.w,Math.min(B.e,q[0])),Math.max(B.s,Math.min(B.n,q[1]))],l=s[s.length-1]; if(!l||Math.hypot(c[0]-l[0],c[1]-l[1])>0.05)s.push(c)}
+        if(s.length>3)out.push(s)}}
+    LAND=out; drawMap();
+  }).catch(()=>{});
+})();
+const S = {
+  bcn:{n:"Barcelona",lon:2.17,lat:41.39},
+  mon:{n:"Montserrat",lon:1.84,lat:41.59,minor:1},
+  ovd:{n:"",lon:-6.03,lat:43.56,minor:1},
+  cud:{n:"Cudillero",lon:-6.15,lat:43.56},
+  cat:{n:"Catedrales",lon:-7.16,lat:43.55,minor:1},
+  ovi:{n:"Oviedo",lon:-5.85,lat:43.36},
+  cng:{n:"Cangas de Onís",lon:-5.13,lat:43.35},
+  pot:{n:"Potes",lon:-4.62,lat:43.15},
+  fde:{n:"Fuente Dé",lon:-4.81,lat:43.15,minor:1},
+  sdr:{n:"Santander",lon:-3.81,lat:43.46},
+  bio:{n:"Bilbao",lon:-2.93,lat:43.26},
+  ss:{n:"San Sebastián",lon:-1.98,lat:43.32},
+  edi:{n:"Edinburgh",lon:-3.19,lat:55.95},
+  kes:{n:"Lake District",lon:-3.13,lat:54.6},
+  liv:{n:"Liverpool",lon:-2.98,lat:53.41},
+  lon:{n:"London",lon:-0.13,lat:51.51}
+};
+// mode: d drive, f flight, t train, s side trip
+const ROUTE_SPAIN_A = [["bcn","mon","s"],["bcn","ovd","f"],["ovd","cud","d"],["cud","cat","s"],["cud","ovi","d"],["ovi","cng","d"],["cng","pot","d"],["pot","fde","s"],["pot","sdr","d"],["sdr","ss","d"],["ss","bio","s"]];
+const ROUTES = {
+  A: [...ROUTE_SPAIN_A],
+  M: [...ROUTE_SPAIN_A,["bio","lon","f"]],
+  B: [["bcn","ovd","f"],["ovd","ovi","d"],["ovi","cng","d"],["cng","pot","d"],["pot","fde","s"],["pot","sdr","d"],["sdr","ss","d"],["ss","bio","s"],["bio","edi","f"],["edi","kes","d"],["kes","liv","d"],["liv","lon","t"]]
+};
+
+const BCN4 = [
+ {base:"In the air",stay:"air",nights:0,s:"bcn",t:"Boston → Barcelona",x:"Overnight nonstop on Level, Iberia or Delta, about 7 hrs.",dr:""},
+ {base:"Barcelona",stay:"rental",nights:4,s:"bcn",t:"Arrive, then the Gothic Quarter",x:"Settle in. Evening in El Born, with dinner at 9 like a local.",tg:["food","art"]},
+ {s:"bcn",t:"Sagrada Família and Park Güell",x:"Timed tickets, booked about 2 months ahead.",tg:["art"],alt:"Taxi up to Park Güell; the hill is steep."},
+ {s:"bcn",t:"Picasso Museum, La Boqueria, Barceloneta",x:"Museum in the morning, market lunch, then the beach.",tg:["art","food","surf"]},
+ {s:"mon",t:"Montserrat day trip",x:"Hikers climb the Sant Jeroni trail to the summit from the monastery.",dr:"train",tg:["hike"],alt:"The funiculars and the monastery terrace are easy going."}
+];
+const PICOS = [
+ {base:"Cangas de Onís · Picos de Europa",stay:"rental",nights:3,s:"cng",t:"Oviedo, then into the Picos",x:"Old town and a sidrería lunch in Oviedo, then on to Cangas and its Roman bridge.",dr:"2 hrs",tg:["food","art"]},
+ {s:"cng",t:"Covadonga and the Lakes",x:"Hikers climb from Lago Ercina to Vega de Ario and the Jultayu viewpoint over the Cares gorge.",dr:"30 min",tg:["hike"],alt:"The shuttle bus does the climbing, and the lakeside loop is flat."},
+ {s:"cng",t:"Ruta del Cares or the Urriellu refuge",x:"Hikers choose: the Cares gorge from Poncebos, or Pandébano up to the foot of Naranjo de Bulnes.",dr:"1 hr each way",tg:["hike"],alt:"The Bulnes funicular from Poncebos goes up through the mountain to a car-free village."},
+ {base:"Potes · Liébana",stay:"rental",nights:2,s:"pot",t:"Through the Hermida gorge to Potes",x:"A dramatic drive along the river. Afternoon in Potes, a stone town with bridges and towers.",dr:"2 hrs",tg:["art","food"]},
+ {s:"fde",t:"Fuente Dé cable car",x:"A 750 m climb in four minutes. Hikers continue to the Horcados Rojos pass, about 2,350 m.",dr:"30 min",tg:["hike"],alt:"Kelley rides up for the views and walks the easy track at the top."}
+];
+const SS3 = [
+ {base:"San Sebastián",stay:"rental",nights:3,s:"sdr",t:"Surf at Somo, then on to San Sebastián",x:"Surfers rent boards for an early session, with lunch in Santander.",dr:"3.5 hrs",tg:["surf","food"]},
+ {s:"ss",t:"La Concha, Zurriola, Parte Vieja",x:"Dawn surf at Zurriola for whoever's up, beach by day, a pintxos crawl at night.",tg:["surf","food"],alt:"Split into two smaller groups; the pintxos bars are packed."},
+ {s:"bio",t:"Guggenheim Bilbao, then Getaria",x:"Museum in the morning, the fishing port of Getaria on the way back, then a cider-house dinner.",dr:"1h15 each way",tg:["art","food"]}
+];
+const SPAIN_A_DAYS = [
+ ...BCN4,
+ {base:"Cudillero · Asturian coast",stay:"rental",nights:2,s:"cud",t:"Fly to Asturias",x:"Vueling or Volotea, about 1h35. Pick up the cars and drive 25 min to a fishing village of painted houses.",tg:["food"]},
+ {s:"cat",t:"Playa de las Catedrales",x:"Rock arches at low tide, then Luarca on the way back.",dr:"1h15 each way",tg:["surf","hike"]},
+ ...PICOS,
+ ...SS3
+];
+const DAYS = {
+ A:[...SPAIN_A_DAYS,{base:"Home",stay:"air",nights:0,s:"bio",t:"Bilbao → home",x:"United's nonstop to Newark (summer 2027), or connect via Madrid or Lisbon.",dr:"1 hr to airport"}],
+ M:[...SPAIN_A_DAYS,
+   {base:"London",stay:"rental",nights:3,s:"lon",t:"Fly Bilbao → London",x:"Several flights a day. Afternoon on the South Bank.",dr:"1 hr to airport",tg:["art"]},
+   {s:"lon",t:"British Museum and Tate Modern",x:"Big museums, all free.",tg:["art"]},
+   {s:"lon",t:"Choice day",x:"Camden, a show, Borough Market or Greenwich.",tg:["food","art"]},
+   {base:"Home",stay:"air",nights:0,s:"lon",t:"Heathrow → Boston",x:"Nonstop, about 7.5 hrs."}],
+ B:[
+ {base:"In the air",stay:"air",nights:0,s:"bcn",t:"Boston → Barcelona",x:"Overnight nonstop.",dr:""},
+ {base:"Barcelona",stay:"rental",nights:3,s:"bcn",t:"Gothic Quarter and El Born",x:"Settle in, with dinner late.",tg:["food","art"]},
+ {s:"bcn",t:"Sagrada Família and Park Güell",x:"Timed tickets, booked about 2 months ahead.",tg:["art"]},
+ {s:"bcn",t:"Picasso Museum, Boqueria, beach",x:"Museum, market lunch, then Barceloneta.",tg:["art","food","surf"]},
+ {base:"Cangas de Onís · Picos de Europa",stay:"rental",nights:3,s:"ovi",t:"Fly to Asturias, lunch in Oviedo",x:"Pick up the cars at the airport and visit a sidrería in Oviedo on the way to Cangas.",dr:"1h15",tg:["food"]},
+ PICOS[1], PICOS[2],
+ PICOS[3], PICOS[4],
+ {base:"San Sebastián",stay:"rental",nights:2,s:"sdr",t:"Surf at Somo, then on to San Sebastián",x:"Early surf for whoever's keen, lunch in Santander, a pintxos crawl at night.",dr:"3.5 hrs",tg:["surf","food"]},
+ {s:"bio",t:"Guggenheim, then La Concha",x:"Bilbao in the morning, then the beach and a cider-house dinner.",dr:"1h15 each way",tg:["art","surf","food"]},
+ {base:"Edinburgh",stay:"rental",nights:3,s:"edi",t:"Fly Bilbao → Edinburgh",x:"Vueling, about 2.5 hrs. Evening on the Royal Mile.",dr:"1h15 to airport",tg:["art"]},
+ {s:"edi",t:"Castle, Old Town closes, Victoria Street",x:"No car needed in Edinburgh.",tg:["art"]},
+ {s:"edi",t:"Arthur's Seat and Dean Village",x:"Hike up in the morning, then the National Museum.",tg:["hike","art"],alt:"Drive or taxi up to Dunsapie Loch for the view without the climb."},
+ {base:"Lake District",stay:"rental",nights:3,s:"kes",t:"Pick up cars, drive to Keswick",x:"Base in Keswick or Ambleside.",dr:"2.5 hrs",tg:["hike"]},
+ {s:"kes",t:"Catbells and Derwentwater",x:"An easy classic fell walk, then the launch boat.",tg:["hike"],alt:"The launch boat loop is the easy way round the lake."},
+ {s:"kes",t:"Helvellyn or Windermere",x:"Hikers take on Helvellyn via Striding Edge. A lake boat to Beatrix Potter's Hill Top is the gentler choice.",tg:["hike"]},
+ {base:"London",stay:"rental",nights:3,s:"liv",t:"Liverpool, then train to London",x:"Albert Dock and The Beatles Story. Drop the cars, then 2h15 by train.",dr:"2 hrs + train",tg:["art"]},
+ {s:"lon",t:"British Museum and Tate Modern",x:"Then the South Bank.",tg:["art"]},
+ {s:"lon",t:"Choice day",x:"Camden, a show, Borough Market or Greenwich.",tg:["food","art"]},
+ {base:"Home",stay:"air",nights:0,s:"lon",t:"Heathrow → Boston",x:"Nonstop."}]
+};
+const META = {
+ A:{days:16,nights:14,bases:5,flights:3,drive:"9 h",v:"<strong>The pick if all 8 come.</strong> No one-night stops, 5 days in Asturias and the Picos with a big hike most days, and three unhurried nights in San Sebastián to finish.",note:"Northern Spain"},
+ M:{days:19,nights:17,bases:6,flights:4,drive:"9 h",v:"<strong>The middle path.</strong> The full Spain route, then three nights in London. It skips the Scotland drive and a second car hire.",note:"Northern Spain + London"},
+ B:{days:21,nights:19,bases:7,flights:4,drive:"12 h",v:"<strong>Two countries, still no one-night stops.</strong> Six moves in 19 nights, with a shorter coast and the Picos kept whole. Scotland and the Lakes can be cool and wet even in June.",note:"Spain, Scotland, England"}
+};
+const LOG = {
+ 5:{eb:"Core 5 · Eamon, Kate, Augie, Etta, Julian",
+   cars:"One 7-seat SUV or estate leaves room for bags. Book an automatic.",
+   lodge:"3-bedroom Airbnb or VRBO rentals at every base. Every stop is 2 nights or more.",
+   dine:"Walk-ins are usually fine. Book one splurge dinner in San Sebastián.",
+   pace:"Any of the three routes works. Option B is fine for this group."},
+ 9:{eb:"All 8 · 4 adults, 2 teens, 2 ten-year-olds",
+   cars:"Two cars, a 7-seater plus a 5-seater, so the group can split for the day. Or one 9-seat van: it fits all 8, but bags will be tight.",
+   lodge:"4–5 bedroom rentals, or two flats in one building. Filter for a lift or a ground-floor bedroom for Kelley.",
+   dine:"Book ahead in Barcelona and San Sebastián. Split into two groups for pintxos.",
+   pace:"Option A or A + London. Easy alternatives appear on the days below."}
+};
+const CHECK = [
+ ["Set Day 1 from Augie's graduation date","Now"],["Decide who's coming: 5 or 8","Mid-Dec"],["Choose the route: A, A + London or B","Mid-Dec"],
+ ["Book the transatlantic flights","Jan"],["Book rentals in Barcelona, San Sebastián and the Picos","Jan"],["Book rental cars (automatics)","Feb"],
+ ["Book Bilbao → Edinburgh or London","Once the schedule is out"],["Buy Sagrada Família tickets","Apr"],["Get the Playa de las Catedrales permit","May"],
+ ["Get IDPs from AAA; check passports, the UK ETA and ETIAS","Spring"]
+];
+
+let opt="A", grp="5", tags=new Set(), active=null;
+const $=id=>document.getElementById(id);
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+function project(stops){
+  const lons=stops.map(s=>s.lon), lats=stops.map(s=>s.lat);
+  let w=Math.min(...lons), e=Math.max(...lons), s=Math.min(...lats), n=Math.max(...lats);
+  const padX=(e-w)*0.1+0.9, padY=(n-s)*0.12+0.8;
+  w-=padX; e+=padX; s-=padY; n+=padY+0.8;
+  const k=Math.cos((s+n)/2*Math.PI/180), SC=100;
+  const W=(e-w)*k*SC, H=(n-s)*SC;
+  return {W,H,p:(lon,lat)=>[(lon-w)*k*SC,(n-lat)*SC],sc:W/1000};
+}
+function drawMap(){
+  const ids=new Set(); ROUTES[opt].forEach(([a,b])=>{if(a!=="BOS")ids.add(a); if(b!=="BOS")ids.add(b)});
+  const P=project([...ids].map(i=>S[i]));
+  const u=Math.max(P.W/560,P.H/640);
+  const svg=$("map"); svg.setAttribute("viewBox",`0 0 ${P.W.toFixed(1)} ${P.H.toFixed(1)}`);
+  let h=`<rect width="${P.W}" height="${P.H}" fill="var(--sea)"/>`;
+  h+=`<g fill="var(--land)" stroke="var(--coast)" stroke-width="${0.9*u}" stroke-linejoin="round">`;
+  for(const ring of LAND){h+=`<path d="M${ring.map(([x,y])=>P.p(x,y).map(v=>v.toFixed(1)).join(",")).join("L")}Z"/>`}
+  h+=`</g>`;
+  const sl=(t,lon,lat)=>{const[x,y]=P.p(lon,lat); if(x>0&&x<P.W&&y>0&&y<P.H) h+=`<text class="sea-lbl" x="${x}" y="${y}" font-size="${13*u}" text-anchor="middle">${t}</text>`};
+  if(opt==="B")sl("Bay of Biscay",-5.2,45.0); else sl("Bay of Biscay",-3.4,44.35); sl("Atlantic",-7.2,44.35); if(opt!=="B")sl("Mediterranean",2.6,40.5); if(opt==="B"){sl("North Sea",0.8,56.3);sl("Irish Sea",-4.9,53.9)}
+  for(const [a,b,m] of ROUTES[opt]){
+    const A=P.p(S[a].lon,S[a].lat), B=P.p(S[b].lon,S[b].lat);
+    const style = m==="f"?`stroke="var(--flight)" stroke-width="${1.8*u}" stroke-dasharray="${6*u} ${4*u}"`
+      : m==="t"?`stroke="var(--ink)" stroke-width="${2*u}" stroke-dasharray="${1*u} ${4*u}" stroke-linecap="round"`
+      : m==="s"?`stroke="var(--muted)" stroke-width="${1.4*u}" stroke-dasharray="${1*u} ${3.5*u}" stroke-linecap="round"`
+      : `stroke="var(--accent)" stroke-width="${2.6*u}" stroke-linecap="round"`;
+    if(m==="f"){const mx=(A[0]+B[0])/2, my=(A[1]+B[1])/2, dx=B[0]-A[0], dy=B[1]-A[1], L=Math.hypot(dx,dy)||1, bend=L*0.18;
+      h+=`<path d="M${A}Q${mx+dy/L*bend},${my-dx/L*bend} ${B}" fill="none" ${style}/>`;}
+    else h+=`<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" ${style}/>`;
+  }
+  const label={cud:["end",-1],ovd:["start",0],cat:["middle",1],ovi:["middle",1],cng:["middle",-1],pot:["start",0],fde:["end",1],sdr:["start",-1],bio:["middle",1],ss:["start",0],bcn:["middle",1],mon:["end",-1],edi:["start",0],kes:["start",0],liv:["start",0],lon:["start",0]};
+  for(const id of ids){
+    const st=S[id]; const [x,y]=P.p(st.lon,st.lat); const on=active===id;
+    const r=(st.minor?3.2:4.6)*u*(on?1.5:1);
+    h+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${on?"var(--flight)":"var(--paper)"}" stroke="${on?"var(--flight)":"var(--ink)"}" stroke-width="${1.6*u}"/>`;
+    const [anc,dir]=label[id]||["start",0];
+    const dx = anc==="start"?9*u: anc==="end"?-9*u:0; const dy = dir===0?4*u: dir<0?-10*u:18*u;
+    const fs=(st.minor?10.5:12)*u;
+    h+=`<text class="lbl${st.minor?" minor":""}" x="${x+dx}" y="${y+dy}" text-anchor="${anc}" font-size="${fs}" stroke-width="${3.5*u}"${on?' style="fill:var(--flight)"':""}>${st.n}</text>`;
+  }
+  svg.innerHTML=h;
+  $("mapnote").textContent=META[opt].note+" · Boston flights not shown";
+}
+
+function render(){
+  const m=META[opt];
+  $("stats").innerHTML=[[m.days,"days"],[m.nights,"nights on the ground"],[m.bases,"bases"],[m.flights,"flights"],[m.drive,"driving between bases"]]
+    .map(([b,s])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+  $("verdict").innerHTML=m.v;
+  $("h1uk").hidden = opt==="A";
+  $("h1uk").textContent = opt==="M" ? ", then London" : ", then Britain";
+  let out="", d=0;
+  for(const day of DAYS[opt]){
+    d++;
+    if(day.base){
+      const st = day.stay==="air"?"Flight":day.stay==="hotel"?"Hotel":"Rental";
+      out+=`<li class="base"><h3>${day.base}<span class="stay ${day.stay}">${st}</span></h3><span class="meta">${day.nights?day.nights+(day.nights>1?" nights":" night"):""}</span></li>`;
+    }
+    const tg=day.tg||[]; const dim=tags.size&&!tg.some(t=>tags.has(t));
+    out+=`<li class="day${dim?" dim":""}${active===day.s?" on":""}" data-s="${day.s}" tabindex="0">
+      <div class="dnum">Day<b>${d}</b></div>
+      <div><p class="dtitle">${day.t}</p><p class="ddet">${day.x}</p>
+      ${(day.dr||tg.length)?`<div class="drow">${day.dr?`<span class="drive">${day.dr==="train"?"by train":"⟶ "+day.dr}</span>`:""}${tg.length?`<span class="tags">${tg.map(t=>`<span class="dot ${t}" title="${t}"></span>`).join("")}</span>`:""}</div>`:""}
+      ${grp==="9"&&day.alt?`<div class="alt">${day.alt}</div>`:""}</div></li>`;
+  }
+  $("days").innerHTML=out;
+  const L=LOG[grp];
+  $("lgEyebrow").textContent=L.eb;
+  $("lg").innerHTML=[["Cars",L.cars],["Lodging",L.lodge],["Dining",L.dine],["Pace",L.pace]].map(([a,b])=>`<div><dt>${a}</dt><dd>${b}</dd></div>`).join("");
+  drawMap();
+}
+function setPressed(seg,attr,val){seg.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset[attr]===val?"true":"false"))}
+$("optSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;opt=b.dataset.opt;active=null;setPressed($("optSeg"),"opt",opt);store.set("trip-opt",opt);render()});
+$("grpSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;grp=b.dataset.grp;setPressed($("grpSeg"),"grp",grp);store.set("trip-grp",grp);render()});
+document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{const t=c.dataset.tag;tags.has(t)?tags.delete(t):tags.add(t);c.setAttribute("aria-pressed",tags.has(t));render()}));
+const pick=e=>{const li=e.target.closest(".day");if(!li)return;active=active===li.dataset.s?null:li.dataset.s;
+  document.querySelectorAll(".day").forEach(x=>x.classList.toggle("on",x.dataset.s===active));drawMap()};
+$("days").addEventListener("click",pick);
+$("days").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(e)}});
+
+const done=new Set(store.get("trip-check")||[]);
+$("check").innerHTML=CHECK.map(([t,w],i)=>`<li><label for="ck${i}"><input type="checkbox" id="ck${i}" ${done.has(i)?"checked":""}><span>${t}</span><span class="when">${w}</span></label></li>`).join("");
+$("check").addEventListener("change",e=>{const i=+e.target.id.slice(2);e.target.checked?done.add(i):done.delete(i);store.set("trip-check",[...done])});
+
+const so=store.get("trip-opt"), sg=store.get("trip-grp");
+if(so&&META[so]){opt=so;setPressed($("optSeg"),"opt",opt)}
+if(sg&&LOG[sg]){grp=sg;setPressed($("grpSeg"),"grp",grp)}
+render();
+</script>
+</body>
+</html>
